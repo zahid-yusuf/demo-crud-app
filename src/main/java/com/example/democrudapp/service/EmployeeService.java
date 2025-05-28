@@ -1,5 +1,6 @@
 package com.example.democrudapp.service;
 
+import com.example.democrudapp.error.EmployeeNotFoundException;
 import com.example.democrudapp.model.Employee;
 import com.example.democrudapp.model.EmployeeRequest;
 import com.example.democrudapp.repository.EmployeeRepository;
@@ -25,31 +26,36 @@ public class EmployeeService {
     }
 
     public Employee getEmployeeById(Long id) {
-        return employeeRepository.getReferenceById(id);
+        return employeeRepository.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found"));
     }
 
-    public Employee createEmployee(String firstName, String lastName) {
+    public Employee createEmployee(String firstName, String lastName, String email) {
         Employee employee = new Employee();
         employee.setFirstName(firstName);
         employee.setLastName(lastName);
-        return employeeRepository.save(employee);
+        employee.setEmail(email);
+        Employee savedEmployee = employeeRepository.save(employee);
+        log.info("Created employee with ID {}", savedEmployee.getId());
+        return savedEmployee;
     }
 
     public void deleteEmployeeById(long id) {
-        employeeRepository.deleteById(id);
-        log.debug("Employee with id=[{}] was deleted.", id);
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found"));
+        employeeRepository.delete(employee);
+        log.info("Deleted employee with ID {}", id);
     }
 
     public Employee updateEmployeeById(long id, EmployeeRequest employeeRequest) {
         Optional<Employee> employee = employeeRepository.findById(id);
         if (employee.isPresent()) {
             Employee existingEmployee = employee.get();
-            if (employeeRequest.getFirstName() != null) existingEmployee.setFirstName(employeeRequest.getFirstName());
-            if (employeeRequest.getLastName() != null) existingEmployee.setLastName(employeeRequest.getLastName());
-            employeeRepository.save(existingEmployee);
-            return existingEmployee;
+            existingEmployee.setFirstName(employeeRequest.getFirstName());
+            existingEmployee.setLastName(employeeRequest.getLastName());
+            existingEmployee.setEmail(employeeRequest.getEmail());
+            log.info("Updated employee with ID {}", id);
+            return employeeRepository.save(existingEmployee);
         } else {
-            return null;
+            throw new EmployeeNotFoundException("Employee with ID " + id + " not found");
         }
     }
 }
