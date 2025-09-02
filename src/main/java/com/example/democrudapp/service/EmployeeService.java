@@ -17,7 +17,6 @@ import java.util.Optional;
 @Slf4j
 public class EmployeeService {
 
-    private static final Logger log = LoggerFactory.getLogger(EmployeeService.class);
     @Autowired
     private EmployeeRepository employeeRepository;
 
